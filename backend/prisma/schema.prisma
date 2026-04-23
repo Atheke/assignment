@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum SubscriptionPlan {
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  CANCELLED
+  PAST_DUE
+}
+
+enum DrawMode {
+  RANDOM
+  ALGORITHMIC
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PAID
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  name         String?
+  role         Role           @default(USER)
+  charityId    String?
+  charity      Charity?       @relation(fields: [charityId], references: [id])
+  scores       Score[]
+  subscription Subscription?
+  drawEntries  DrawEntry[]
+  winnerClaims WinnerClaim[]
+  refreshTokens RefreshToken[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Charity {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  logoUrl      String?
+  /// Basis points of gross subscription directed to charity (e.g. 500 = 5%)
+  basisPoints  Int      @default(500)
+  active       Boolean  @default(true)
+  users        User[]
+  createdAt    DateTime @default(now())
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan                 SubscriptionPlan
+  status               SubscriptionStatus @default(INACTIVE)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  currentPeriodEnd     DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+model Score {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  value    Int
+  playedOn DateTime @db.Date
+
+  @@unique([userId, playedOn])
+  @@index([userId])
+}
+
+model Draw {
+  id               String        @id @default(cuid())
+  year             Int
+  month            Int
+  mode             DrawMode
+  jackpotCents     Int           @default(0)
+  winningNumbers   Json
+  executedAt       DateTime?
+  entriesClosedAt  DateTime?
+  rolloverFromDrawId String?
+  entries          DrawEntry[]
+  winnerClaims     WinnerClaim[]
+  createdAt        DateTime      @default(now())
+
+  @@unique([year, month])
+}
+
+model DrawEntry {
+  id        String   @id @default(cuid())
+  drawId    String
+  draw      Draw     @relation(fields: [drawId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  numbers   Json
+  createdAt DateTime @default(now())
+
+  @@unique([drawId, userId])
+}
+
+model WinnerClaim {
+  id             String        @id @default(cuid())
+  drawId         String
+  draw           Draw          @relation(fields: [drawId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  matchCount     Int
+  prizeCents     Int
+  proofUrl       String?
+  paymentStatus  PaymentStatus @default(PENDING)
+  adminNote      String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([drawId])
+  @@index([userId])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}

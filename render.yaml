@@ -1,0 +1,25 @@
+# Render Blueprint — wire env vars in the dashboard (DATABASE_URL, JWT secrets, etc.).
+services:
+  - type: web
+    name: orbit-backend
+    runtime: node
+    plan: starter
+    rootDir: .
+    buildCommand: npm install && npm run db:generate && npm run build -w backend
+    startCommand: npm run start -w backend
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "4000"
+
+  - type: web
+    name: orbit-frontend
+    runtime: node
+    plan: starter
+    rootDir: .
+    buildCommand: npm install && npm run build -w frontend
+    startCommand: npm run start -w frontend
+    envVars:
+      - key: NODE_ENV
+        value: production

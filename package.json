@@ -1,0 +1,28 @@
+{
+  "name": "orbit-saas",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n api,web -c cyan,magenta \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "dev:backend": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "build": "npm run build -w backend && npm run build -w frontend",
+    "lint": "npm run lint -w backend --if-present && npm run lint -w frontend --if-present",
+    "test": "npm run test -w backend",
+    "db:generate": "npm -w backend exec prisma generate",
+    "db:migrate": "npm -w backend exec prisma migrate deploy",
+    "db:push": "npm -w backend exec prisma db push",
+    "db:seed": "npm -w backend exec prisma db seed",
+    "postinstall": "npm run db:generate"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
