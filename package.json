@@ -16,8 +16,7 @@
     "db:generate": "npm -w backend exec prisma generate",
     "db:migrate": "npm -w backend exec prisma migrate deploy",
     "db:push": "npm -w backend exec prisma db push",
-    "db:seed": "npm -w backend exec prisma db seed",
-    "postinstall": "npm run db:generate"
+    "db:seed": "npm -w backend exec prisma db seed"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"
