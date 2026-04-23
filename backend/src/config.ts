@@ -10,6 +10,13 @@ function optional(name: string, fallback: string): string {
   return process.env[name] ?? fallback;
 }
 
+function parseOrigins(value: string): string[] {
+  return value
+    .split(",")
+    .map((v) => v.trim().replace(/\/$/, ""))
+    .filter(Boolean);
+}
+
 export const config = {
   nodeEnv: optional("NODE_ENV", "development"),
   port: Number(optional("PORT", "4000")),
@@ -18,7 +25,9 @@ export const config = {
   jwtRefreshSecret: optional("JWT_REFRESH_SECRET", "dev-refresh-change-me"),
   jwtAccessExpires: optional("JWT_ACCESS_EXPIRES", "15m"),
   jwtRefreshExpiresDays: Number(optional("JWT_REFRESH_EXPIRES_DAYS", "30")),
-  frontendOrigin: optional("FRONTEND_URL", "http://localhost:3000"),
+  frontendOrigins: parseOrigins(
+    optional("CORS_ORIGINS", optional("FRONTEND_URL", "http://localhost:3000")),
+  ),
   stripeSecretKey: optional("STRIPE_SECRET_KEY", ""),
   stripeWebhookSecret: optional("STRIPE_WEBHOOK_SECRET", ""),
   stripePriceMonthly: optional("STRIPE_PRICE_MONTHLY", ""),
